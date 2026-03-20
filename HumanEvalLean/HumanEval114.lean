@@ -1,3 +1,5 @@
+module
+
 import Std.Tactic.Do
 open Std.Do
 set_option mvcgen.warning false
@@ -47,10 +49,6 @@ example : minSubarraySum #[] = 0 := by decide
 
 attribute [grind =] List.toList_mkSlice_rco List.toList_mkSlice_rci List.le_min_iff
 attribute [grind →] List.mem_of_mem_take List.mem_of_mem_drop
-
-@[simp, grind =]
-theorem List.sum_append_int {l₁ l₂ : List Int} : (l₁ ++ l₂).sum = l₁.sum + l₂.sum := by
-  induction l₁ generalizing l₂ <;> simp_all [Int.add_assoc]
 
 /-!
 ### Helper lemmas
@@ -118,7 +116,7 @@ theorem isMinSubarraySum₀_append_singleton_eq {xs : List Int} {x minSum minSuf
   by_cases h : minSum ≤ minSuff + x
   · rw [show min (minSuff + x) minSum = minSum by grind]
     apply And.intro
-    · grind [IsMinSubarraySum₀, List.take_append_of_le_length]
+    · grind [IsMinSubarraySum₀]
     · intro i j hi hj
       simp only [List.toList_mkSlice_rco]
       by_cases heq : j = (xs ++ [x]).length
@@ -141,9 +139,9 @@ theorem isMinSubarraySum₀_append_singleton_eq {xs : List Int} {x minSum minSuf
         · grind
         · simp only [heq, List.toList_mkSlice_rco, List.take_length]
           have := h₂.2 i (by grind)
-          grind [List.drop_append_of_le_length]
+          grind
       · have := h₁.2 i j (by grind) (by grind)
-        grind [List.take_append_of_le_length]
+        grind
 
 -- using this lemma would lead to complicated `take` expressions that are harder to solve for
 -- `grind`
@@ -163,25 +161,16 @@ theorem isMinSuffixSum₀_append_singleton_eq {xs : List Int} {x minSuff : Int}
       by_cases hieq : i = (xs ++ [x]).length
       · grind
       · simp only [IsMinSuffixSum₀] at h
-        grind [List.drop_append_of_le_length]
+        grind
   · rw [show min 0 (minSuff + x) = minSuff + x by grind]
     apply And.intro
     · simp only [IsMinSuffixSum₀] at h
-      grind [List.drop_append_of_le_length]
+      grind
     · intro i hi
       by_cases hieq : i = (xs ++ [x]).length
       · grind
       · simp only [IsMinSuffixSum₀] at h
-        grind [List.drop_append_of_le_length]
-
-theorem List.zero_le_min_of_zero_le_sum {xs : List Int} (hne : xs ≠ []) (h : xs.sum ≤ 0) :
-    xs.min hne ≤ 0 := by
-  induction xs
-  · grind
-  · rename_i x xs ih
-    cases xs
-    · simp_all [List.min_eq_get_min?]
-    · grind [min?_cons, min_eq_get_min?]
+        grind
 
 theorem List.length_mul_le_sum {xs : List Int} {m : Int} (h : ∀ x, x ∈ xs → m ≤ x) :
     xs.length * m ≤ xs.sum := by

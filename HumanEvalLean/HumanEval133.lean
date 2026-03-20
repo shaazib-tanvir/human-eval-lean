@@ -1,5 +1,50 @@
-def sum_squares : Unit :=
-  ()
+module
+
+def sumSquares (xs : List Rat) : Int :=
+  xs.map (·.ceil ^ (2 : Nat)) |>.sum
+
+/-! ## Tests -/
+
+example : sumSquares [1, 2, 3] = 14 := by native_decide
+example : sumSquares [1.0, 2, 3] = 14 := by native_decide
+example : sumSquares [1, 3, 5, 7] = 84 := by native_decide
+example : sumSquares [1.4, 4.2, 0] = 29 := by native_decide
+example : sumSquares [-2.4, 1, 1] = 6 := by native_decide
+example : sumSquares [100, 1, 15, 2] = 10230 := by native_decide
+example : sumSquares [10000, 10000] = 200000000 := by native_decide
+example : sumSquares [-1.4, 4.6, 6.3] = 75 := by native_decide
+example : sumSquares [-1.4, 17.9, 18.9, 19.9] = 1086 := by native_decide
+example : sumSquares [0] = 0 := by native_decide
+example : sumSquares [-1] = 1 := by native_decide
+example : sumSquares [-1, 1, 0] = 2 := by native_decide
+
+/-!
+## Verification
+
+We start pointing to lemmas that verify `Rat.ceil` and then express the correctness lemmas in
+terms of `Rat.ceil`.
+-/
+
+/-- info: Rat.ceil_lt {x : Rat} : ↑x.ceil < x + 1 -/
+#guard_msgs in
+#check Rat.ceil_lt
+
+/-- info: Rat.le_ceil {x : Rat} : x ≤ ↑x.ceil -/
+#guard_msgs in
+#check Rat.le_ceil
+
+@[grind =]
+theorem sumSquares_nil :
+    sumSquares [] = 0 := by
+  grind [sumSquares]
+
+theorem sumSquares_singleton :
+    sumSquares [x] = x.ceil * x.ceil := by
+  grind [sumSquares]
+
+theorem sumSquares_append {xs ys : List Rat} :
+    sumSquares (xs ++ ys) = sumSquares xs + sumSquares ys := by
+  grind [sumSquares]
 
 /-!
 ## Prompt
@@ -17,7 +62,7 @@ def sum_squares(lst):
     For lst = [1,3,5,7] the output should be 84
     For lst = [1.4,4.2,0] the output should be 29
     For lst = [-2.4,1,1] the output should be 6
-    
+
 
     """
 ```

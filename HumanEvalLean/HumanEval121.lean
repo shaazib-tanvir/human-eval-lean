@@ -1,5 +1,10 @@
--- This can't be a module right now because `Rxi.Iterator.Monadic.Step` is not exposed
-import Std
+module
+
+public import Std
+-- `Rxi.Iterator.Monadic.Step` is not exposed
+import all Init.Data.Range.Polymorphic.RangeIterator
+
+public section
 
 open Std Std.PRange Std.Do
 
@@ -34,7 +39,7 @@ example : solution'' [3, 13, 2, 9] = 3 := by decide
 ## Verification 1
 -/
 
-theorem solution''_aux {xs : List Int} {acc : Int} :
+private theorem solution''_aux {xs : List Int} {acc : Int} :
     solution''.go xs acc = acc + (xs.mapIdx (fun i x => if i % 2 = 0 ∧ x % 2 = 1 then x else 0)).sum := by
   fun_induction solution''.go xs acc <;> grind
 
@@ -71,9 +76,6 @@ example : solution' [3, 13, 2, 9] = 3 := by decide
 ## Verification 2
 -/
 
-theorem List.sum_append_int {l₁ l₂ : List Int} : (l₁ ++ l₂).sum = l₁.sum + l₂.sum := by
-  induction l₁ generalizing l₂ <;> simp_all [Int.add_assoc]
-
 theorem solution'_spec {xs : List Int} :
     solution' xs = (xs.mapIdx (fun i x => if i % 2 = 0 ∧ x % 2 = 1 then x else 0)).sum := by
   generalize h : solution' xs = r
@@ -81,9 +83,9 @@ theorem solution'_spec {xs : List Int} :
   mvcgen
   · exact ⇓⟨cur, even, sum⟩ => ⌜even = (cur.prefix.length % 2 = 0) ∧ sum = (cur.prefix.mapIdx (fun i x => if i % 2 = 0 ∧ x % 2 = 1 then x else 0)).sum⌝
   · mleave
-    simp [List.sum_append_int]
+    simp
     grind
-  · simp [List.sum_append_int]
+  · simp
     grind
   · grind
   · grind
@@ -130,19 +132,18 @@ public theorem Rxi.Iterator.toList_take_eq_match
     cases it.step using PlausibleIterStep.casesOn <;> rename_i heq
     · rename_i it' _
       rcases it with ⟨⟨next⟩⟩ | _
-      · simp [Iter.IsPlausibleStep, IterM.IsPlausibleStep, Iterator.IsPlausibleStep,
+      · simp [Iter.IsPlausibleStep, IterM.IsPlausibleStep, Iterator.IsPlausibleStep, Rxi.instIteratorIteratorIdOfUpwardEnumerable, -- TODO: remove `inst...` as soon as `simp` works as expected
           Rxi.Iterator.Monadic.step, Iter.toIterM] at heq
-      · simp only [Iter.IsPlausibleStep, IterM.IsPlausibleStep, Iterator.IsPlausibleStep,
-        IterStep.mapIterator_yield, Iter.toIterM, Rxi.Iterator.Monadic.step, IterStep.yield.injEq,
-        IterM.mk'.injEq] at heq
+      · simp only [Iter.IsPlausibleStep, IterM.IsPlausibleStep, Iterator.IsPlausibleStep, Rxi.instIteratorIteratorIdOfUpwardEnumerable, -- TODO: remove `inst...` as soon as `simp` works as expected
+        IterStep.mapIterator_yield, Iter.toIterM, Rxi.Iterator.Monadic.step, IterStep.yield.injEq] at heq
         cases heq.2
         cases it'
         simp at heq
         simp [heq]
-    · simp only [Iter.IsPlausibleStep, IterM.IsPlausibleStep, Iterator.IsPlausibleStep,
+    · simp only [Iter.IsPlausibleStep, IterM.IsPlausibleStep, Iterator.IsPlausibleStep, Rxi.instIteratorIteratorIdOfUpwardEnumerable, -- TODO: remove `inst...` as soon as `simp` works as expected
         IterStep.mapIterator_skip, Iter.toIterM, Rxi.Iterator.Monadic.step] at heq
       split at heq <;> contradiction
-    · simp only [Iter.IsPlausibleStep, IterM.IsPlausibleStep, Iterator.IsPlausibleStep,
+    · simp only [Iter.IsPlausibleStep, IterM.IsPlausibleStep, Iterator.IsPlausibleStep, Rxi.instIteratorIteratorIdOfUpwardEnumerable, -- TODO: remove `inst...` as soon as `simp` works as expected
       IterStep.mapIterator_done, Rxi.Iterator.Monadic.step, Iter.toIterM] at heq
       split at heq
       · simp [*]

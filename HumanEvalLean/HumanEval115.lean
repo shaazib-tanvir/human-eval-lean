@@ -44,74 +44,14 @@ actions needed.
 
 attribute [grind =] Vector.sum_mk List.zip_cons_cons List.zip_nil_right List.zip_nil_left
 
--- this is in Mathlib
-theorem Nat.div_add_div_le_add_div (a b c : Nat) : a / c + b / c ≤ (a + b) / c := by
-  by_cases h : 0 < c
-  · rw [← (Nat.mul_le_mul_right_iff (show 0 < c by grind)), Nat.add_mul]
-    simp only [Nat.div_mul_self_eq_mod_sub_self]
-    have (a b c d : Nat) (h : b ≤ a) (h' : d ≤ c) : (a - b) + (c - d) = (a + c) - (b + d) := by grind
-    rw [this, Nat.sub_le_sub_iff_left]
-    · rw [Nat.add_mod]
-      apply Nat.mod_le
-    · apply Nat.mod_le
-    · apply Nat.mod_le
-    · apply Nat.mod_le
-  · grind
-
-theorem Nat.le_mul_iff_le_left (hc : 0 < z) :
-    x ≤ y * z ↔ (x + z - 1) / z ≤ y := by
-  rw [Nat.div_le_iff_le_mul hc]
-  omega
-
-@[simp, grind =]
-theorem Vector.sum_toList {xs : Vector Nat α} :
-    xs.toList.sum = xs.sum := by
-  rw [← Vector.mk_toArray (xs := xs), Vector.toList_mk, Vector.sum_mk, Array.sum_eq_sum_toList]
-
-@[simp, grind =]
-theorem Vector.sum_toArray {xs : Vector Nat α} :
-    xs.toArray.sum = xs.sum := by
-  rw [Vector.sum_mk]
-
-@[simp, grind =]
-theorem Vector.toList_zip {as : Vector α n} {bs : Vector β n} :
-    (Vector.zip as bs).toList = List.zip as.toList bs.toList := by
-  rcases as with ⟨as, rfl⟩
-  rcases bs with ⟨bs, h⟩
-  simp
-
-theorem List.exists_mem_iff_exists_getElem (P : α → Prop) (l : List α) :
-    (∃ x ∈ l, P x) ↔ ∃ (i : Nat), ∃ hi, P (l[i]'hi) := by
-  grind [mem_iff_getElem]
-
 theorem List.sum_eq_zero {l : List Nat} : l.sum = 0 ↔
     ∀ (i : Nat) (hi : i < l.length), l[i] = 0 := by
   rw [← Decidable.not_iff_not]
-  simp [← Nat.pos_iff_ne_zero, Nat.sum_pos_iff_exists_pos, List.exists_mem_iff_exists_getElem]
+  simp [← Nat.pos_iff_ne_zero, List.sum_pos_iff_exists_pos_nat, List.exists_mem_iff_exists_getElem]
 
 theorem Vector.sum_eq_zero {xs : Vector Nat n} : xs.sum = 0 ↔ ∀ (i : Nat) (hi : i < n), xs[i] = 0 := by
   rw [← Vector.sum_toList, List.sum_eq_zero]
   grind
-
-theorem List.sum_eq_foldl {xs : List Nat} :
-    xs.sum = xs.foldl (init := 0) (· + ·) := by
-  rw [← List.reverse_reverse (as := xs)]
-  generalize xs.reverse = xs
-  induction xs <;> grind
-
-theorem Array.sum_eq_foldl {xs : Array Nat} :
-    xs.sum = xs.foldl (init := 0) (· + ·) := by
-  rw [← Array.toArray_toList (xs := xs)]
-  grind [List.sum_eq_foldl]
-
-theorem Vector.ofFn_getElem {xs : Vector α n} :
-    Vector.ofFn (fun i : Fin n => xs[i.val]) = xs := by
-  grind
-
-theorem Array.map_ofFn {f : Fin n → α} {g : α → β} :
-    (Array.ofFn f).map g = Array.ofFn (g ∘ f) := by
-  apply Array.ext_getElem?
-  grind [Array.getElem?_ofFn]
 
 /-!
 ### The concrete model
@@ -288,7 +228,8 @@ theorem AbstractWellAction.apply_list {well : AbstractWell} {as : List (Abstract
 @[grind =]
 theorem isWellEmpty_iff_isEmpty_abstract {well : Vector Nat n} :
     IsWellEmpty well ↔ (abstract well).IsEmpty := by
-  grind [abstract, IsWellEmpty, Vector.sum_eq_zero]
+  simp [abstract, AbstractWell.IsEmpty, Vector.sum_eq_zero_iff_forall_eq_nat,
+    Vector.forall_mem_iff_forall_getElem, IsWellEmpty]
 
 theorem minimalAbstractWellActions_abstract_iff {well : Vector Nat n} {c : Nat} {r : Nat} :
     MinimalAbstractWellActions (abstract well) c r ↔ MinimalWellActions well c r := by
@@ -365,8 +306,7 @@ theorem maxFill_eq_sum_minimalWellActions {grid : (Vector (Vector Nat n) m)} {c 
   refine ⟨.ofFn fun i => (grid[i.val].sum + c - 1) / c, ?_, ?_⟩
   · grind [minimalWellActions]
   · simp only [maxFill]
-    -- Should rename `Array.toArray_toIter` to `Array.toArray_iter`
-    rw [← Iter.foldl_toArray, Iter.toArray_map, Array.toArray_toIter, ← Array.sum_eq_foldl]
+    rw [← Iter.foldl_toArray, Iter.toArray_map, Array.toArray_iter, ← Array.sum_eq_foldl]
     conv => lhs; rw [← Vector.ofFn_getElem (xs := grid), Vector.toArray_ofFn, Array.map_ofFn]
     rw [← Vector.sum_toArray, Vector.toArray_ofFn, Function.comp_def]
 

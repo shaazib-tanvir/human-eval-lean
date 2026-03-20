@@ -1,5 +1,48 @@
-def median : Unit :=
-  ()
+module
+
+/-! ## Implementation -/
+
+public section
+
+def median (xs : Array Int) (h : xs ≠ #[]) : Rat :=
+  let sorted := xs.mergeSort
+  have : 0 < sorted.size := by grind [Array.size_mergeSort]
+  if xs.size % 2 = 1 then
+    sorted[sorted.size / 2]
+  else
+    (sorted[sorted.size / 2 - 1] + sorted[sorted.size / 2] : Rat) / 2
+
+/-! ## Tests -/
+
+example : median #[3, 1, 2, 4, 5] (by decide) = 3 := by native_decide
+example : median #[-10, 4, 6, 1000, 10, 20] (by decide) = 8 := by native_decide
+example : median #[5] (by decide) = 5 := by native_decide
+example : median #[6, 5] (by decide) = 11/2 := by native_decide
+example : median #[8, 1, 3, 9, 9, 2, 7] (by decide) = 7 := by native_decide
+
+/-! ## Verification -/
+
+theorem median_eq_getElem_of_odd {xs : Array Int} {h} (h' : xs.size % 2 = 1) :
+    median xs h = xs.mergeSort[xs.size / 2]'(by grind [Array.size_mergeSort]) := by
+  grind [median, Array.size_mergeSort]
+
+theorem two_mul_median_of_even {xs : Array Int} {h} (h' : xs.size % 2 = 0) :
+    2 * median xs h =
+      xs.mergeSort[xs.size / 2 - 1]'(by grind [Array.size_mergeSort]) +
+      xs.mergeSort[xs.size / 2]'(by grind [Array.size_mergeSort]) := by
+  grind [median, Array.size_mergeSort]
+
+/-!
+### MergeSort properties
+
+The following two library lemmas show that `Array.mergeSort` correctly sorts an array.
+-/
+
+example {xs : Array Int} : xs.mergeSort.toList.Pairwise (· ≤ ·) := by
+  grind [Array.pairwise_mergeSort]
+
+example {xs : Array Int} : xs.mergeSort.Perm xs := by
+  grind [Array.mergeSort_perm, Array.Perm]
 
 /-!
 ## Prompt
@@ -39,7 +82,7 @@ def check(candidate):
     assert candidate([-10, 4, 6, 1000, 10, 20]) == 8.0
     assert candidate([5]) == 5
     assert candidate([6, 5]) == 5.5
-    assert candidate([8, 1, 3, 9, 9, 2, 7]) == 7 
+    assert candidate([8, 1, 3, 9, 9, 2, 7]) == 7
 
 ```
 -/

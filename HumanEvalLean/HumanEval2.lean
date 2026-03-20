@@ -1,5 +1,48 @@
-def truncate_number : Unit :=
-  ()
+module
+
+/-!
+# Problem 2
+
+## Implementation
+-/
+
+def truncateNumber (x : Rat) : Rat :=
+  x - x.floor
+
+/-!
+## Tests
+-/
+
+example : truncateNumber (7/2) = 1/2 := by native_decide
+example : truncateNumber (133/100) = 33/100 := by native_decide
+example : truncateNumber (123456/1000) = 456/1000 := by native_decide
+
+/-!
+## Verification
+-/
+
+/--
+{lean}`x.floor` is the largest integer less than or equal to `x`.
+In other words, if {given}`k : Int` is less than or equal to `x`, then `k ≤ x.floor`.
+-/
+theorem le_floor_of_le_self {x : Rat} {k : Int} (h : k ≤ x) :
+    k ≤ x.floor :=
+  Rat.le_floor_iff.mpr h
+
+/--
+Every rational number `x` is the sum of `x.floor` and `truncateNumber x`.
+-/
+theorem floor_add_truncateNumber :
+    x.floor + truncateNumber x = x := by
+  grind [truncateNumber]
+
+theorem zero_le_truncateNumber :
+    0 ≤ truncateNumber x := by
+  grind [Rat.floor_le, truncateNumber]
+
+theorem truncateNumber_lt_one :
+    truncateNumber x < 1 := by
+  grind [Rat.lt_floor, truncateNumber]
 
 /-!
 ## Prompt

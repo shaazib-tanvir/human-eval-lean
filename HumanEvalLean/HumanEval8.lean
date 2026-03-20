@@ -1,3 +1,5 @@
+module
+
 import Std.Tactic.Do
 open Std.Do
 set_option mvcgen.warning false
@@ -19,18 +21,6 @@ def sumProductDo (xs : List Int) : Int × Int := Id.run do
     product := product * x
 
   return (sum, product)
-
-@[grind =]
-theorem List.sum_append (xs : List Int) (ys : List Int) :
-    sum (xs ++ ys) = sum xs + sum ys := by
-  induction xs with
-  | nil =>
-    change sum ys = 0 + sum ys
-    omega
-  | cons x xs hi =>
-    change x + sum (xs ++ ys) = x + sum xs + sum ys
-    rw [hi]
-    omega
 
 @[grind =]
 theorem List.product_append (xs : List Int) (ys : List Int) :
